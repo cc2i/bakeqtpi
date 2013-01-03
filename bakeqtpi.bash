@@ -20,7 +20,8 @@ fi
 CROSSCOMPILERPATH=$CROSSCOMPILER/bin/arm-linux-gnueabihf-gcc
 
 MOUNT=$OPT_DIRECTORY/rasp-pi-image
-ROOTFS=$OPT_DIRECTORY/rasp-pi-rootfs
+MOUNTPOINT=$OPT_DIRECTORY/rasp-pi-rootfs
+ROOTFS=$OPT_DIRECTORY/rootfs
 
 QT5PIPREFIX=/usr/local/qt5pi
 QT5ROOTFSPREFIX=$ROOTFS/usr/local/qt5pi
@@ -48,13 +49,13 @@ else
     CROSSCOMPILEGIT="gitorious.org/cross-compile-tools/cross-compile-tools.git "
 fi
 
-QT_GIT="gitorious.org/qt/qt5.git"
+QT_GIT="gitorious.org/qtsdk/qtsdk.git"
 GIT=GIT
 
 QT5_PACKAGE_VER=5.0.0
 QT5_PACKAGE_DOWNLOAD=http://releases.qt-project.org/qt5/$QT5_PACKAGE_VER/single/qt-everywhere-opensource-src-$QT5_PACKAGE_VER.tar.gz
 
-INITREPOARGS="--no-webkit -f"
+INITREPOARGS=""
 
 CONFIGURE_OPTIONS=""
 
@@ -245,26 +246,48 @@ function downloadAndMountPi {
 		$DEBUGFS -f $OPT_DIRECTORY/rdump.lst $DISK || error 3
 	    fi
 	else
-	    if [ ! -d $ROOTFS ]; then
+	    if [ ! -d $MOUNTPOINT ]; then
 		if [ "$(id -u)" != "0" ]; then
-		    sudo mkdir $ROOTFS || error 3
+		    sudo mkdir $MOUNTPOINT || error 3
 		else
-		    mkdir $ROOTFS || error 3
+		    mkdir $MOUNTPOINT || error 3
 		fi
 	    else
 		if [ "$(id -u)" != "0" ]; then
-		    sudo umount $ROOTFS
+		    sudo umount $MOUNTPOINT
 		else
-		    umount $ROOTFS
+		    umount $MOUNTPOINT
 		fi
 	    fi
 	    if [ "$(id -u)" != "0" ]; then
-		sudo mount -o loop,offset=62914560 $RASPBIAN_IMG $ROOTFS || error 3
+		sudo mount -o loop,offset=62914560 $RASPBIAN_IMG $MOUNTPOINT || error 3
 	    else
-		mount -o loop,offset=62914560 $RASPBIAN_IMG $ROOTFS || error 3
-	    fi
+		mount -o loop,offset=62914560 $RASPBIAN_IMG $MOUNTPOINT || error 3
+		fi
 	fi
 	echo "Raspbian mounted"
+}
+
+#Dump rootfs from raspberry image
+function dumpfs {
+	if [[ ! "$OSTYPE" =~ darwin.*  ]];
+	then
+		if [ ! -e $ROOTFS/.DUMPED ]; then
+			echo "Extracting rootfs dump from image"
+			cd $OPT_DIRECTORY
+			./extract-sdk-rootfs.sh $MOUNTPOINT
+			prepcctools
+			cd $ROOTFS
+
+			ln -s arm-linux-gnueabihf/jconfig.h usr/include/
+			ln -s ../../../lib/arm-linux-gnueabihf/liblzma.so.5.0.0 usr/lib/arm-linux-gnueabihf/liblzma.so.5
+			ln -s ../../../lib/arm-linux-gnueabihf/libexpat.so.1.6.0 usr/lib/arm-linux-gnueabihf/libexpat.so.1
+			ln -s ../../../lib/arm-linux-gnueabihf/libz.so.1.2.7 usr/lib/arm-linux-gnueabihf/libz.so.1
+			touch .DUMPED
+			cd -
+			echo "Dump completed"
+		fi
+	fi
 }
 
 #Download and extract cross compiler and tools
@@ -297,44 +320,48 @@ function dlcc {
 function dlqt {
     if [ ! "$QT5_PACKAGE" == 1 ];
     then
-	echo "Cloning QT Code"
-	cd $OPT_DIRECTORY
-	if [ ! -d $OPT_DIRECTORY/qt5/.git ]; then
-	    git clone $QT_GIT || error 6
-	else
-	    cd $OPT_DIRECTORY/qt5/ && git pull
-	    cd $CROSSCOMPILETOOLS
-	    ./syncQt5
-	    cd $OPT_DIRECTORY
-	fi
-	cd qt5
-	while [ ! -e $OPT_DIRECTORY/qt5/.initialised ]
-	do
-	    ./init-repository $INITREPOARGS && touch $OPT_DIRECTORY/qt5/.initialised
-	done || error 7
-	echo "Code cloned"
-	#cd $OPT_DIRECTORY/qt5/qtjsbackend
-	#git fetch https://codereview.qt-project.org/p/qt/qtjsbackend refs/changes/56/27256/4 && git cherry-pick FETCH_HEAD
+		echo "Cloning QT Code"
+		cd $OPT_DIRECTORY
+		if [ ! -d $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/.git ]; then
+		    git clone $QT_GIT || error 6
+		else
+		    cd $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/ && git pull
+		    #cd $CROSSCOMPILETOOLS
+		    #./syncQt5
+		    #cd $OPT_DIRECTORY
+		fi
+		cd $QT5_SOURCE_DIRECTORY
+		while [ ! -e $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/.initialised ]
+		do
+		    ./init-repository $INITREPOARGS && touch $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/.initialised
+		done || error 7
+		echo "Code cloned"
+		#cd $OPT_DIRECTORY/qt5/qtjsbackend
+		#git fetch https://codereview.qt-project.org/p/qt/qtjsbackend refs/changes/56/27256/4 && git cherry-pick FETCH_HEAD
     else
-	echo "Donwloading QT5 Package"
-	cd $OPT_DIRECTORY
-	wget $WGET_OPT $QT5_PACKAGE_DOWNLOAD || error 4
-	tar -xf qt-everywhere-opensource-src-$QT5_PACKAGE_VER.tar.gz
-	echo "QT5 Downloaded"
+		echo "Donwloading QT5 Package"
+		cd $OPT_DIRECTORY
+		wget $WGET_OPT $QT5_PACKAGE_DOWNLOAD || error 4
+		tar -xf qt-everywhere-opensource-src-$QT5_PACKAGE_VER.tar.gz
+		echo "QT5 Downloaded"
     fi
 }
 
 function prepcctools {
-    cd $CROSSCOMPILETOOLS
-    echo "Fixing Qualified Library Paths, whatever that means..."
-    ./fixQualifiedLibraryPaths $ROOTFS $CROSSCOMPILERPATH || error 8
-    cd $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/qtbase
+	if [ ! -e $ROOTFS/.PREPARED ]
+	then
+		cd $CROSSCOMPILETOOLS
+		echo "Fixing Qualified Library Paths, whatever that means..."
+		./fixQualifiedLibraryPaths $ROOTFS $CROSSCOMPILERPATH || error 8
+		touch .PREPARED
+		cd $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/qtbase
+	fi
 }
 
 function configureandmakeqtbase {
     echo "Configuring QT Base"
 
-    CONFIGURE_OPTIONS="-opengl es2 -device linux-rasp-pi-g++ -device-option CROSS_COMPILE=$CROSSCOMPILER/bin/arm-linux-gnueabihf- -sysroot $ROOTFS -opensource -confirm-license -optimized-qmake -release -make libs -prefix $QT5PIPREFIX -no-pch"
+	CONFIGURE_OPTIONS="-opengl es2 -device linux-rasp-pi-g++ -device-option CROSS_COMPILE=$CROSSCOMPILER/bin/arm-linux-gnueabihf- -sysroot $ROOTFS -opensource -confirm-license -optimized-qmake -release -prefix $QT5PIPREFIX -no-pch"
 
     if [ ! -f /etc/redhat-release ]
     then
@@ -382,11 +409,6 @@ function makemodules {
 	fi
     done
 
-    cd $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/qtdeclarative/examples/demos/samegame
-    $QT5PIPREFIX/bin/qmake .
-    make -j $CORES
-    sudo make install
-
     for i in $QT_COMPILE_LIST
     do
 	if [ -e "$OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/$i/.COMPILED" ]
@@ -433,18 +455,21 @@ if [ "$QT5_PACKAGE" == 1 ]; then
     QT5_SOURCE_DIRECTORY="qt-everywhere-opensource-src-$QT5_PACKAGE_VER"
     echo "Building from Package"
 else
-    QT_COMPILE_LIST="qtimageformats qtsvg qtjsbackend qtscript qtxmlpatterns qtdeclarative qtsensors qt3d qtgraphicaleffects qtlocation qtquick1 qtsystems qtmultimedia"
-    QT5_SOURCE_DIRECTORY="qt5"
+    QT_COMPILE_LIST="qtimageformats qtsvg qtjsbackend qtscript qtxmlpatterns qtdeclarative qtgraphicaleffects qtquick1 qtmultimedia qtwebkit"
+    QT5_SOURCE_DIRECTORY="qtsdk"
     echo "Building from Git"
 fi
 
-
 mkdir -p $OPT_DIRECTORY || error 1
+
+cp extract-sdk-rootfs.sh $OPT_DIRECTORY || error 1
+
 cd $OPT_DIRECTORY || error 1
 
 downloadAndMountPi
 dlcc
 dlqt
+dumpfs
 prepcctools
 configureandmakeqtbase
 installqtbase
