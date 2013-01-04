@@ -55,7 +55,7 @@ GIT=GIT
 QT5_PACKAGE_VER=5.0.0
 QT5_PACKAGE_DOWNLOAD=http://releases.qt-project.org/qt5/$QT5_PACKAGE_VER/single/qt-everywhere-opensource-src-$QT5_PACKAGE_VER.tar.gz
 
-INITREPOARGS=""
+INITREPOARGS="-f"
 
 CONFIGURE_OPTIONS=""
 
@@ -344,7 +344,19 @@ function dlqt {
 		wget $WGET_OPT $QT5_PACKAGE_DOWNLOAD || error 4
 		tar -xf qt-everywhere-opensource-src-$QT5_PACKAGE_VER.tar.gz
 		echo "QT5 Downloaded"
-    fi
+	fi
+}
+
+function applypatchs {
+if [ ! -e $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/.PATCHED ]; then
+	cp $OPT_DIRECTORY/0001-Adjusts-to-build-qtbase-with-support-to-openvg.patch $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/qtbase
+	cp $OPT_DIRECTORY/0001-V8-Add-support-for-using-armv6-vfp2-instructions.patch $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/qtjsbackend
+	cd $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/qtbase
+	patch -p1 < 0001-Adjusts-to-build-qtbase-with-support-to-openvg.patch
+	cd $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/qtjsbackend
+	patch -p1 < 0001-V8-Add-support-for-using-armv6-vfp2-instructions.patch
+	touch $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/.PATCHED
+fi
 }
 
 function prepcctools {
@@ -361,7 +373,7 @@ function prepcctools {
 function configureandmakeqtbase {
     echo "Configuring QT Base"
 
-	CONFIGURE_OPTIONS="-opengl es2 -device linux-rasp-pi-g++ -device-option CROSS_COMPILE=$CROSSCOMPILER/bin/arm-linux-gnueabihf- -sysroot $ROOTFS -opensource -confirm-license -optimized-qmake -release -prefix $QT5PIPREFIX -no-pch"
+	CONFIGURE_OPTIONS="-opengl es2 -device linux-rasp-pi-g++ -device-option CROSS_COMPILE=$CROSSCOMPILER/bin/arm-linux-gnueabihf- -sysroot $ROOTFS -opensource -confirm-license -optimized-qmake -release -prefix $QT5PIPREFIX -no-pch -nomake tests -nomake examples -plugin-sql-sqlite"
 
     if [ ! -f /etc/redhat-release ]
     then
@@ -463,12 +475,15 @@ fi
 mkdir -p $OPT_DIRECTORY || error 1
 
 cp extract-sdk-rootfs.sh $OPT_DIRECTORY || error 1
+cp 0001-Adjusts-to-build-qtbase-with-support-to-openvg.patch $OPT_DIRECTORY || error 1
+cp 0001-V8-Add-support-for-using-armv6-vfp2-instructions.patch $OPT_DIRECTORY || error 1
 
 cd $OPT_DIRECTORY || error 1
 
 downloadAndMountPi
 dlcc
 dlqt
+applypatchs
 dumpfs
 prepcctools
 configureandmakeqtbase
