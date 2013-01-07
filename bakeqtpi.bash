@@ -463,11 +463,11 @@ if [ ! "$QT5_PACKAGE" == 1 ]; then
 fi
 
 if [ "$QT5_PACKAGE" == 1 ]; then
-    QT_COMPILE_LIST="qtimageformats qtsvg qtjsbackend qtscript qtxmlpatterns qtdeclarative qtgraphicaleffects qtquick1 qtmultimedia qtwebkit"
+    QT_COMPILE_LIST="qtimageformats qtsvg qtjsbackend qtscript qtxmlpatterns qtdeclarative qtgraphicaleffects qtmultimedia qtwebkit qtquick1"
     QT5_SOURCE_DIRECTORY="qt-everywhere-opensource-src-$QT5_PACKAGE_VER"
     echo "Building from Package"
 else
-    QT_COMPILE_LIST="qtimageformats qtsvg qtjsbackend qtscript qtxmlpatterns qtdeclarative qtgraphicaleffects qtquick1 qtmultimedia qtwebkit"
+    QT_COMPILE_LIST="qtimageformats qtsvg qtjsbackend qtscript qtxmlpatterns qtdeclarative qtgraphicaleffects qtmultimedia qtwebkit qtquick1"
     QT5_SOURCE_DIRECTORY="qtsdk"
     echo "Building from Git"
 fi
