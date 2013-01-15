@@ -280,7 +280,7 @@ function dlcc {
         ln -s $CROSSCOMPILER/bin/arm-linux-gnueabihf-readelf readelf
         export PATH=$OPT_DIRECTORY:$PATH
 	else
-		wget $WGET_OPT http://blueocean.qmh-project.org/gcc-4.7-linaro-rpi-gnueabihf.tbz || error 4
+		wget $WGET_OPT http://swap.tsmt.eu/gcc-4.7-linaro-rpi-gnueabihf.tbz || error 4
 		tar -xf gcc-4.7-linaro-rpi-gnueabihf.tbz || error 5
 		CROSSCOMPILERPATH=$CROSSCOMPILER/bin/arm-linux-gnueabihf-gcc
 	fi
