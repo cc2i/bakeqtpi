@@ -4,8 +4,7 @@
 
 
 SCRIPT_DIR=$PWD
-OPT_DIRECTORY=~/opt
-QTBASE=$OPT_DIRECTORY/qt5
+OPT_DIRECTORY=$HOME/opt
 
 #Some sensible defaults
 
@@ -304,7 +303,7 @@ function dlcc {
 	ln -s $CROSSCOMPILER/bin/arm-linux-gnueabihf-readelf readelf
 	export PATH=$OPT_DIRECTORY:$PATH
 	else
-	    wget $WGET_OPT http://blueocean.qmh-project.org/gcc-4.7-linaro-rpi-gnueabihf.tbz || error 4
+	    wget $WGET_OPT http://swap.tsmt.eu/gcc-4.7-linaro-rpi-gnueabihf.tbz || error 4
 	    tar -xf gcc-4.7-linaro-rpi-gnueabihf.tbz || error 5
 	    CROSSCOMPILERPATH=$CROSSCOMPILER/bin/arm-linux-gnueabihf-gcc
 	fi
@@ -330,7 +329,7 @@ function dlqt {
 		    #./syncQt5
 		    #cd $OPT_DIRECTORY
 		fi
-		cd $QT5_SOURCE_DIRECTORY
+		cd $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY
 		while [ ! -e $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/.initialised ]
 		do
 		    ./init-repository $INITREPOARGS && touch $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/.initialised
