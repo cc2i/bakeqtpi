@@ -307,15 +307,9 @@ function dlcc {
 	ln -s $CROSSCOMPILER/bin/arm-linux-gnueabihf-readelf readelf
 	export PATH=$OPT_DIRECTORY:$PATH
 	else
-<<<<<<< HEAD
-		wget $WGET_OPT http://swap.tsmt.eu/gcc-4.7-linaro-rpi-gnueabihf.tbz || error 4
-		tar -xf gcc-4.7-linaro-rpi-gnueabihf.tbz || error 5
-		CROSSCOMPILERPATH=$CROSSCOMPILER/bin/arm-linux-gnueabihf-gcc
-=======
 	    wget $WGET_OPT http://swap.tsmt.eu/gcc-4.7-linaro-rpi-gnueabihf.tbz || error 4
 	    tar -xf gcc-4.7-linaro-rpi-gnueabihf.tbz || error 5
 	    CROSSCOMPILERPATH=$CROSSCOMPILER/bin/arm-linux-gnueabihf-gcc
->>>>>>> danielcbit/build_qtsdk
 	fi
 
 	if [ ! -d $CROSSCOMPILETOOLS/.git ]; then
