@@ -26,7 +26,7 @@ QT5PIPREFIX=/usr/local/qt5pi
 QT5ROOTFSPREFIX=$ROOTFS/usr/local/qt5pi
 
 #Raspbian image and download stuff
-RASPBIAN=2012-10-28-wheezy-raspbian
+RASPBIAN=2013-02-09-wheezy-raspbian
 
 RASPBIAN_HTTP=http://ftp.snt.utwente.nl/pub/software/rpi/images/raspbian/$RASPBIAN/$RASPBIAN.zip
 RASPBIAN_TORRENT=http://downloads.raspberrypi.org/images/raspbian/$RASPBIAN/$RASPBIAN.zip.torrent
