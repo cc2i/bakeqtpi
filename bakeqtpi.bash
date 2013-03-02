@@ -88,6 +88,7 @@ do
 		    echo "		./bakeqtpi.bash [options]"
 		    echo "options:"
 		    echo "		--package		Downloads and builds the official QT5 Package from qt-project.org"
+		    echo "		--webkit		Builds Webkit"
 		    echo "		--http			Tells git and init-repository to use http(s)"
 		    echo "		--httppi 		Tells the script to download the Raspbian image using http/wget"
 		    echo "		--torrentpi		Tells the script to download the Raspbian image using torrent/ctorrent"
@@ -106,6 +107,9 @@ do
 	    --package)
 		    QT5_PACKAGE=1
 		    ;;
+            --webkit)
+                    WEBKIT=1
+                    ;;
 	    --http)
 		    GIT=HTTPS
 		    ;;
@@ -461,12 +465,17 @@ if [ ! "$QT5_PACKAGE" == 1 ]; then
     fi
 fi
 
-if [ "$QT5_PACKAGE" == 1 ]; then
+
+if [ "$WEBKIT" == 1 ]; then
     QT_COMPILE_LIST="qtimageformats qtsvg qtjsbackend qtscript qtxmlpatterns qtdeclarative qtgraphicaleffects qtmultimedia qtwebkit qtquick1"
+else
+    QT_COMPILE_LIST="qtimageformats qtsvg qtjsbackend qtscript qtxmlpatterns qtdeclarative qtgraphicaleffects qtmultimedia qtquick1"
+fi
+
+if [ "$QT5_PACKAGE" == 1 ]; then
     QT5_SOURCE_DIRECTORY="qt-everywhere-opensource-src-$QT5_PACKAGE_VER"
     echo "Building from Package"
 else
-    QT_COMPILE_LIST="qtimageformats qtsvg qtjsbackend qtscript qtxmlpatterns qtdeclarative qtgraphicaleffects qtmultimedia qtwebkit qtquick1"
     QT5_SOURCE_DIRECTORY="qtsdk"
     echo "Building from Git"
 fi
