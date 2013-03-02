@@ -363,20 +363,24 @@ fi
 }
 
 function prepcctools {
-	if [ ! -e $ROOTFS/.PREPARED ]
-	then
-		cd $CROSSCOMPILETOOLS
-		echo "Fixing Qualified Library Paths, whatever that means..."
-		./fixQualifiedLibraryPaths $ROOTFS $CROSSCOMPILERPATH || error 8
-		touch .PREPARED
-		cd $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/qtbase
-	fi
+    if [ ! [ "$OSTYPE" =~ darwin.* ]]; then
+    	ROOTFS = $MOUNTPOINT
+    fi
+
+    if [ ! -e $ROOTFS/.PREPARED ]
+    then
+        cd $CROSSCOMPILETOOLS
+        echo "Fixing Qualified Library Paths, whatever that means..."
+        ./fixQualifiedLibraryPaths $ROOTFS $CROSSCOMPILERPATH || error 8
+        touch .PREPARED
+        cd $OPT_DIRECTORY/$QT5_SOURCE_DIRECTORY/qtbase
+    fi
 }
 
 function configureandmakeqtbase {
     echo "Configuring QT Base"
 
-	CONFIGURE_OPTIONS="-opengl es2 -device linux-rasp-pi-g++ -device-option CROSS_COMPILE=$CROSSCOMPILER/bin/arm-linux-gnueabihf- -sysroot $ROOTFS -opensource -confirm-license -optimized-qmake -release -prefix $QT5PIPREFIX -no-pch -nomake tests -nomake examples -plugin-sql-sqlite"
+    CONFIGURE_OPTIONS="-opengl es2 -device linux-rasp-pi-g++ -device-option CROSS_COMPILE=$CROSSCOMPILER/bin/arm-linux-gnueabihf- -sysroot $ROOTFS -opensource -confirm-license -optimized-qmake -release -prefix $QT5PIPREFIX -no-pch -nomake tests -nomake examples -plugin-sql-sqlite"
 
     if [ ! -f /etc/redhat-release ]
     then
