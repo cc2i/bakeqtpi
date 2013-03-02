@@ -363,8 +363,8 @@ fi
 }
 
 function prepcctools {
-    if [ ! [ "$OSTYPE" =~ darwin.* ]]; then
-    	ROOTFS = $MOUNTPOINT
+    if [[ ! "$OSTYPE" =~ darwin.* ]]; then
+    	ROOTFS=$MOUNTPOINT
     fi
 
     if [ ! -e $ROOTFS/.PREPARED ]
@@ -486,7 +486,11 @@ fi
 
 mkdir -p $OPT_DIRECTORY || error 1
 
-cp extract-sdk-rootfs.sh $OPT_DIRECTORY || error 1
+if [[ "$OSTYPE" =~ darwin.* ]]
+then
+    cp extract-sdk-rootfs.sh $OPT_DIRECTORY || error 1
+fi
+
 cp 0001-Adjusts-to-build-qtbase-with-support-to-openvg.patch $OPT_DIRECTORY || error 1
 cp 0001-V8-Add-support-for-using-armv6-vfp2-instructions.patch $OPT_DIRECTORY || error 1
 
