@@ -269,6 +269,13 @@ function downloadAndMountPi {
 		fi
 	fi
 	echo "Raspbian mounted"
+	echo "Linking missing file vchost_config.h into rootfs"
+	if [ "$(id -u)" != "0" ]; then
+		sudo ln -s $MOUNTPOINT/opt/vc/include/interface/vmcs_host/linux/vchost_config.h $MOUNTPOINT/opt/vc/include/interface/vmcs_host/vchost_config.h
+	else
+		ln -s $MOUNTPOINT/opt/vc/include/interface/vmcs_host/linux/vchost_config.h $MOUNTPOINT/opt/vc/include/interface/vmcs_host/vchost_config.h
+		fi
+	echo "Linking vchost_config.h done"
 }
 
 #Dump rootfs from raspberry image
